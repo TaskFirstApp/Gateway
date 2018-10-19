@@ -2,8 +2,10 @@ package com.taskfirstapp.entity;
 
 import java.util.Collection;
 import java.util.List;
+import java.util.stream.Collectors;
 
 import org.springframework.security.core.GrantedAuthority;
+import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
 
 import lombok.Getter;
@@ -19,11 +21,10 @@ public class TaskUserDetails implements UserDetails {
 	private String username;
 	private String password;
 	private List<String> roles;
-
+	
 	@Override
 	public Collection<? extends GrantedAuthority> getAuthorities() {
-		// TODO Auto-generated method stub
-		return null;
+		return roles.stream().map(role -> new SimpleGrantedAuthority(role)).collect(Collectors.toList());
 	}
 
 	@Override

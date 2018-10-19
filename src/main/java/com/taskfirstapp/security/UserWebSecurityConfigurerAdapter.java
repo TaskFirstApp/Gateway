@@ -1,31 +1,42 @@
 package com.taskfirstapp.security;
 
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.Configuration;
+import org.springframework.security.config.annotation.authentication.builders.AuthenticationManagerBuilder;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
+import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.config.annotation.web.configuration.WebSecurityConfigurerAdapter;
-import org.springframework.stereotype.Component;
+import org.springframework.security.config.http.SessionCreationPolicy;
+import org.springframework.security.core.userdetails.UserDetailsService;
+import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
+import org.springframework.security.crypto.password.PasswordEncoder;
 
-@Component
+@EnableWebSecurity
+@Configuration
 public class UserWebSecurityConfigurerAdapter extends WebSecurityConfigurerAdapter {
-	
+
+	@Autowired
+	private UserDetailsService userDetailsService;
+
 	@Override
-	protected void configure(HttpSecurity http) throws Exception {
-
-		// @formatter:off
-		http
-			.authorizeRequests()
-				.antMatchers("/login","/logout","/home" ).permitAll()
-				.anyRequest().authenticated()
-				.and()
-			.formLogin()
-				.loginPage("/login").permitAll()
-				.and()
-				.logout().permitAll()
-				.and()
-			.httpBasic();
-		
-		// @formatter:on
-
+	protected void configure(AuthenticationManagerBuilder auth) throws Exception {
+		auth.userDetailsService(userDetailsService);
+	} 
+	
+	@Bean
+	public PasswordEncoder passwordEncoder() {
+		return new BCryptPasswordEncoder();
 	}
 	
-	
+	@Override
+	public void configure(HttpSecurity httpSecurity) throws Exception {
+		// @formatter:off
+		httpSecurity.csrf().disable()
+			.authorizeRequests().anyRequest().hasAnyAuthority("APP_USER")
+			.and().httpBasic()
+			.and().sessionManagement().sessionCreationPolicy(SessionCreationPolicy.STATELESS) // We don't need sessions to be created.
+			;
+		// @formatter:on
+	}
 }
